@@ -1,0 +1,3 @@
+[submodule "modules/CMSIS-NN"]
+	path = modules/CMSIS-NN
+	url = https://github.com/ARM-software/CMSIS-NN.git
