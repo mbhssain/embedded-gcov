@@ -1,0 +1,14 @@
+*.o
+*.elf
+*.map
+*.gcno
+*.gcda
+*.gcov
+*.html
+*.css
+*.js
+*.json
+*.txt
+*.log
+*.csv
+*.png
