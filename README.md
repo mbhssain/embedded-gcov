@@ -14,3 +14,9 @@ make coverage-report
 make html 
 open coverage_html/index.html
 ```
+
+
+Working build without coverage
+```
+make -f makefile.new all   
+```

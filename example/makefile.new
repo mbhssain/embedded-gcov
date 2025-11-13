@@ -1,0 +1,167 @@
+
+# ============================================================================
+# Makefile rule to build cmsis_nn_example.elf
+# Equivalent to CMake build process from build_and_run_tests.sh
+# ============================================================================
+
+# Paths
+CMSIS_5_PATH := ../modules/CMSIS_5
+ETHOS_U_CORE_PLATFORM_PATH := ../modules/ethos-u-core-platform
+CORSTONE_300_PATH := ../Corstone-300
+CMSIS_NN_PATH := ../modules/CMSIS-NN
+
+# Target CPU configuration
+TARGET_CPU := cortex-m55
+ARM_CPU := ARMCM55
+ARM_FEATURES :=
+
+# Compiler
+CC := arm-none-eabi-gcc
+AR := arm-none-eabi-ar
+OBJCOPY := arm-none-eabi-objcopy
+
+# Optimization level
+OPTIMIZATION := -O0
+
+# Include directories
+CMSIS_CORE_INC := -I$(CMSIS_5_PATH)/CMSIS/Core/Include
+CMSIS_DEVICE_INC := -I$(CMSIS_5_PATH)/Device/ARM/$(ARM_CPU)/Include
+CMSIS_NN_INC := -I$(CMSIS_NN_PATH)/Include
+CORSTONE_300_INC := -I$(CORSTONE_300_PATH)
+
+# Source files
+MAIN_SRC := cmsis_nn_example.c
+CORSTONE_300_SRCS := $(CORSTONE_300_PATH)/retarget.c $(CORSTONE_300_PATH)/uart.c
+CMSIS_STARTUP_SRCS := $(CMSIS_5_PATH)/Device/ARM/$(ARM_CPU)/Source/startup_$(ARM_CPU).c \
+                      $(CMSIS_5_PATH)/Device/ARM/$(ARM_CPU)/Source/system_$(ARM_CPU).c
+
+# Collect all CMSIS-NN source files
+CMSIS_NN_SRCS := $(shell find $(CMSIS_NN_PATH)/Source -name "*.c" | sort)
+
+# Object files
+OBJDIR := objs
+MAIN_OBJ := $(OBJDIR)/cmsis_nn_example.o
+CORSTONE_300_OBJS := $(OBJDIR)/retarget.o $(OBJDIR)/uart.o
+CMSIS_STARTUP_OBJS := $(OBJDIR)/startup_$(ARM_CPU).o $(OBJDIR)/system_$(ARM_CPU).o
+CMSIS_NN_OBJS := $(patsubst $(CMSIS_NN_PATH)/%.c,$(OBJDIR)/cmsis_nn_%.o,$(CMSIS_NN_SRCS))
+
+ALL_OBJS := $(MAIN_OBJ) $(CORSTONE_300_OBJS) $(CMSIS_STARTUP_OBJS) $(CMSIS_NN_OBJS)
+
+# Linker script
+LINKER_SCRIPT := $(CORSTONE_300_PATH)/linker.ld
+
+# Output
+TARGET := cmsis_nn_example.elf
+
+# Compiler flags from toolchain file (arm-none-eabi-gcc.cmake)
+CPU_FLAGS := -mcpu=$(TARGET_CPU) -mthumb
+FLOAT_FLAGS := -mfloat-abi=hard
+STANDARD_FLAGS := -std=c11
+SECTION_FLAGS := -fdata-sections -ffunction-sections
+DEBUG_FLAGS := -gdwarf-3
+
+UART_LOG=cmsis_nn_example_uart.log
+
+# Warning flags from toolchain file
+WARNING_FLAGS := -Wall -Wextra \
+                 -Wcast-align \
+                 -Wdouble-promotion \
+                 -Wformat \
+                 -Wmissing-field-initializers \
+                 -Wnull-dereference \
+                 -Wredundant-decls \
+                 -Wshadow \
+                 -Wswitch \
+                 -Wswitch-default \
+                 -Wunused \
+                 -Wno-psabi
+
+# Additional flags from CMakeLists.txt
+CMAKE_EXTRA_FLAGS := -fomit-frame-pointer \
+                     -Werror \
+                     -Wimplicit-function-declaration \
+                     -Wunused-variable \
+                     -Wunused-function \
+                     -Wno-redundant-decls \
+                     -Wvla
+
+# Compile flags
+CFLAGS := $(CPU_FLAGS) \
+          $(FLOAT_FLAGS) \
+          $(STANDARD_FLAGS) \
+          $(SECTION_FLAGS) \
+          $(DEBUG_FLAGS) \
+          $(WARNING_FLAGS) \
+          $(CMAKE_EXTRA_FLAGS) \
+          $(OPTIMIZATION) \
+          $(CMSIS_CORE_INC) \
+          $(CMSIS_DEVICE_INC) \
+          $(CMSIS_NN_INC) \
+          $(CORSTONE_300_INC) \
+          -include$(ARM_CPU)$(ARM_FEATURES).h \
+          -D$(ARM_CPU)$(ARM_FEATURES) \
+          -DUSING_FVP_CORSTONE_300 \
+          -DNDEBUG
+
+# Linker flags
+LDFLAGS := $(CPU_FLAGS) \
+           $(FLOAT_FLAGS) \
+           -T$(LINKER_SCRIPT) \
+           --specs=nosys.specs \
+           -Wl,--nmagic \
+           -Wl,--gc-sections \
+           -Wl,--entry=Reset_Handler
+
+# Create object directory
+$(OBJDIR):
+	mkdir -p $(OBJDIR)
+
+# Pattern rule for CMSIS-NN object files
+$(OBJDIR)/cmsis_nn_%.o: $(CMSIS_NN_PATH)/%.c | $(OBJDIR)
+	@mkdir -p $(dir $@)
+	$(CC) $(CFLAGS) -c $< -o $@
+
+# Main source file
+$(MAIN_OBJ): $(MAIN_SRC) | $(OBJDIR)
+	$(CC) $(CFLAGS) -c $< -o $@
+
+# Corstone-300 retarget
+$(OBJDIR)/retarget.o: $(CORSTONE_300_PATH)/retarget.c | $(OBJDIR)
+	$(CC) $(CFLAGS) -c $< -o $@
+
+# Corstone-300 uart
+$(OBJDIR)/uart.o: $(CORSTONE_300_PATH)/uart.c | $(OBJDIR)
+	$(CC) $(CFLAGS) -c $< -o $@
+
+# CMSIS startup
+$(OBJDIR)/startup_$(ARM_CPU).o: $(CMSIS_5_PATH)/Device/ARM/$(ARM_CPU)/Source/startup_$(ARM_CPU).c | $(OBJDIR)
+	$(CC) $(CFLAGS) -c $< -o $@
+
+# CMSIS system
+$(OBJDIR)/system_$(ARM_CPU).o: $(CMSIS_5_PATH)/Device/ARM/$(ARM_CPU)/Source/system_$(ARM_CPU).c | $(OBJDIR)
+	$(CC) $(CFLAGS) -c $< -o $@
+
+# Link everything
+$(TARGET): $(ALL_OBJS) $(LINKER_SCRIPT)
+	$(CC) $(LDFLAGS) $(ALL_OBJS) -o $@
+
+# Default target
+all: $(TARGET)
+
+# Clean
+clean:
+	rm -rf $(OBJDIR) $(TARGET) $(UART_LOG)
+
+# Print variables (for debugging)
+print-vars:
+	@echo "CMSIS_5_PATH: $(CMSIS_5_PATH)"
+	@echo "CMSIS_NN_PATH: $(CMSIS_NN_PATH)"
+	@echo "CORSTONE_300_PATH: $(CORSTONE_300_PATH)"
+	@echo "TARGET_CPU: $(TARGET_CPU)"
+	@echo "ARM_CPU: $(ARM_CPU)"
+	@echo "CMSIS_NN_SRCS count: $(words $(CMSIS_NN_SRCS))"
+	@echo "ALL_OBJS count: $(words $(ALL_OBJS))"
+	@echo "CFLAGS: $(CFLAGS)"
+	@echo "LDFLAGS: $(LDFLAGS)"
+
+.PHONY: all clean print-vars

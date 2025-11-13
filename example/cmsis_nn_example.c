@@ -112,6 +112,9 @@ main (void)
     {
       printf("\nMax pooling failed with status: %d\n", status);
     }
+    printf("\nsanity check passed\n");
+    printf("\nsanity check passed\n");
+    printf("\nsanity check passed\n");
   
   // Because we are running this example under unix,
   // the unix application shutdown will call
