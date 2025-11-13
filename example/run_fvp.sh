@@ -26,8 +26,8 @@ echo "================================================"
 echo ""
 
 # Run on FVP with timeout
-  /workspaces/CS_Demo/cmsisnn-demo/vendor/CMSIS-NN/Tests/UnitTest/downloads/corstone300_download/models/Linux64_armv8l_GCC-9.3/FVP_Corstone_SSE-300_Ethos-U55
-  -a "$ELF_ABS" \
+  FVP_Corstone_SSE-300_Ethos-U55 \
+  -a "/Users/mohammed.abuhussein/workspace/embedded-gcov/example/cmsis_nn_example.elf" \
   -C mps3_board.visualisation.disable-visualisation=1 \
   -C cpu0.semihosting-enable=0 \
   -C mps3_board.telnetterminal0.start_telnet=0 \

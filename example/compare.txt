@@ -1,3 +1,0 @@
-   text	   data	    bss	    dec	    hex	filename
-  17510	   1492	  35616	  54618	   d55a	cmsis_nn_example_arm.elf
-   7322	    108	    372	   7802	   1e7a	cmsis_nn_example_arm_no_cov.elf

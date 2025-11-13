@@ -19,16 +19,16 @@ void tearDown(void) {}
 
 
 // Simple ReLU activation function (CMSIS-NN style)
-void arm_relu_q7(int8_t *data, uint16_t size)
-{
-  uint16_t i;
+// void arm_relu_q7(int8_t *data, uint16_t size)
+// {
+//   uint16_t i;
   
-  for (i = 0; i < size; i++)
-    {
-      if (data[i] < 0)
-        data[i] = 0;
-    }
-}
+//   for (i = 0; i < size; i++)
+//     {
+//       if (data[i] < 0)
+//         data[i] = 0;
+//     }
+// }
 
 int
 main (void)
