@@ -1,3 +1,12 @@
 [submodule "modules/CMSIS-NN"]
 	path = modules/CMSIS-NN
 	url = https://github.com/ARM-software/CMSIS-NN.git
+[submodule "modules/CMSIS_5"]
+	path = modules/CMSIS_5
+	url = https://github.com/ARM-software/CMSIS_5
+[submodule "modules/ethos-u-core-platform"]
+	path = modules/ethos-u-core-platform
+	url = https://review.mlplatform.org/ml/ethos-u/ethos-u-core-platform
+[submodule "modules/FVPs-on-Mac"]
+	path = modules/FVPs-on-Mac
+	url = https://github.com/Arm-Examples/FVPs-on-Mac.git
